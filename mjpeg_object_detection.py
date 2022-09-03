@@ -2,9 +2,9 @@ import numpy as np
 import cv2 as cv
 
 LABELS_FILE = 'yolo/data/coco.names'
-CONFIG_FILE = 'yolo/cfg/yolov3.cfg'
-WEIGHTS_FILE = 'yolo/weights/yolov3-spp.weights'
-CONFIDENCE_THRESHOLD = 0.3
+CONFIG_FILE = 'yolo/cfg/yolov3-tiny.cfg'
+WEIGHTS_FILE = 'yolo/weights/yolov3-tiny.weights'
+CONFIDENCE_THRESHOLD = 0.5
 
 H = None
 W = None
@@ -19,8 +19,7 @@ net = cv.dnn.readNetFromDarknet(CONFIG_FILE, WEIGHTS_FILE)
 
 
 def get_stream(file_path):
-    print("Reading file"+file_path)
-    capture = cv.VideoCapture(file_path)
+    capture = cv.VideoCapture(0)
 
     if not capture.isOpened():
         print("Cannot open camera")
@@ -31,10 +30,11 @@ def get_stream(file_path):
     OutLayers = net.getUnconnectedOutLayers()
     ln = net.getLayerNames()
     ln = [ln[i - 1] for i in OutLayers]
-
+    count = 0
     while True:
         ret, frame = capture.read()
-
+        count += 1
+        print('frame', count)
         if not ret:
             print("Can't receive frame (stream end?). Exiting ...")
             break
@@ -97,7 +97,7 @@ def get_stream(file_path):
 
                 cv.rectangle(frame, (x, y), (x + w, y + h),
                              color, thickness=thickness)
-
+        cv.waitKey(1)
         # return the analyzed frame
         jpeg = cv.imencode('.jpg', frame)[1]
         return jpeg.tobytes()
