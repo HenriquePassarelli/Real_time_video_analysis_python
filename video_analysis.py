@@ -18,11 +18,11 @@ class VideoAnalysis:
 
     def __init__(self):
         global ROIArea
-        self.load_layers()
+        self.__load_layers()
         ROIArea = []
 
     @staticmethod
-    def load_layers():
+    def __load_layers():
         global net, ln
         net = cv2.dnn.readNetFromDarknet(CONFIG_FILE, WEIGHTS_FILE)
         ln = net.getLayerNames()
@@ -30,7 +30,7 @@ class VideoAnalysis:
         ln = net.getLayerNames()
         ln = [ln[i - 1] for i in OutLayers]
 
-    def get_video(self, video_url=0):
+    def __get_video(self, video_url=0):
         capture = cv2.VideoCapture(video_url)
 
         if not capture.isOpened():
@@ -39,19 +39,54 @@ class VideoAnalysis:
 
         return capture
 
-    def check_points(self, ROIArea, point_start, point_end):
+    def intersect(self, line1, line2):
+        px = ((line1[0][0] * line1[1][1] - line1[0][1] * line1[1][0]) * (line2[0][0] - line2[1][0]) -
+              (line1[0][0] - line1[1][0]) * (line2[0][1]
+                                             * line2[1][1] - line2[0][1] * line2[1][0])) / (line1[0][0] - line1[1][0]) * (line2[0][1] - line2[1][1]) - (line1[0][1] - line1[1][1]) * (line2[0][0] - line2[1][0])
+
+        py = ((line1[0][0] * line1[1][1] - line1[0][1] * line1[1][0]) * (line2[0][1] - line2[1][1]) - (line1[0][1] - line1[1][1]) * (line2[0][1]
+
+                                                                                                                                     * line2[1][1] - line2[0][1] * line2[1][0])) / (line1[0][0] - line1[1][0]) * (line2[0][1] - line2[1][1]) - (line1[0][1] - line1[1][1]) * (line2[0][0] - line2[1][0])
+        print(px, py)
+
+    # segments must be pass in the format [(x0,y0),(x1,y1)]
+    def __intersects(self, segment1, segment2):
+        dx0 = segment1[1][0]-segment1[0][0]
+        dx1 = segment2[1][0]-segment2[0][0]
+        dy0 = segment1[1][1]-segment1[0][1]
+        dy1 = segment2[1][1]-segment2[0][1]
+        p0 = dy1*(segment2[1][0]-segment1[0][0]) - \
+            dx1*(segment2[1][1]-segment1[0][1])
+        p1 = dy1*(segment2[1][0]-segment1[1][0]) - \
+            dx1*(segment2[1][1]-segment1[1][1])
+        p2 = dy0*(segment1[1][0]-segment2[0][0]) - \
+            dx0*(segment1[1][1]-segment2[0][1])
+        p3 = dy0*(segment1[1][0]-segment2[1][0]) - \
+            dx0*(segment1[1][1]-segment2[1][1])
+
+        return (p0*p1 <= 0) & (p2*p3 <= 0)
+
+    def __check_points(self, ROIArea, point_start, point_end):
         points = [point_start, [point_start[0], point_end[1]],
                   point_end, [point_start[1], point_end[0]]]
+        check_distance = False
 
         for area in ROIArea:
+            if len(area) <= 2:
+                lines = [[points[0], points[1]], [points[2], points[3]]]
+                for line in lines:
+                    return self.__intersects(area, line)
             for point in points:
                 check = cv2.pointPolygonTest(
-                    area, point, False)
+                    area, point, check_distance)
                 if check >= 0:
                     return True
 
+        return False
+
+    # start the stream and analysis
     def read_stream(self, video_url):
-        video = self.get_video(video_url)
+        video = self.__get_video(video_url)
         if not video:
             return
 
@@ -66,12 +101,14 @@ class VideoAnalysis:
 
             boxes, confidences, classIDs = [], [], []
 
+            # loop over each of the layer outputs
             for output in layerOutputs:
                 for detection in output:
                     scores = detection[5:]
                     classID = np.argmax(scores)
                     confidence = scores[classID]
 
+                    # filter out weak predictions
                     if confidence > CONFIDENCE_THRESHOLD:
                         box = detection[0:4] * np.array([w, h, w, h])
                         (centerX, centerY, width, height) = box.astype("int")
@@ -85,6 +122,7 @@ class VideoAnalysis:
                         confidences.append(float(confidence))
                         classIDs.append(classID)
 
+            # filter overlapping boxes
             idxs = cv2.dnn.NMSBoxes(boxes, confidences, CONFIDENCE_THRESHOLD,
                                     CONFIDENCE_THRESHOLD)
             thickness = 1
@@ -108,16 +146,16 @@ class VideoAnalysis:
                     point_start = [x_start, y_start]
                     point_end = [x_start + w, y_start + h]
 
-                    threshold = self.check_points(
+                    threshold = self.__check_points(
                         ROIArea, point_start, point_end)
 
                     if threshold:
-                        print('result: ', threshold)
+                        print('warn: ', threshold)
                     else:
-                        print('result: ', threshold)
+                        print('warn: ', threshold)
 
                     color = [int(c) for c in COLORS[classIDs[i]]]
-
+                    # draw a box
                     cv2.rectangle(frame, point_start, point_end,
                                   color, thickness=thickness)
 

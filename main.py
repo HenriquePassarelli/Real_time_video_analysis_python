@@ -8,6 +8,7 @@ app = Flask(__name__)
 
 video_analysis = VideoAnalysis()
 
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -18,6 +19,9 @@ def index():
 def http_stream():
     userInput = request.args.get('url')
     url = base64.b64decode(userInput).decode('utf-8')
+    if not url.strip():
+        print('hi')
+        return Response('Missing parameters, eg. /stream?url=base64 url', status=400)
     print(url)
 
     return Response(video_analysis.read_stream(url),
@@ -27,9 +31,11 @@ def http_stream():
 @app.route('/ROI', methods=['POST'])
 def set_ROI():
     content = request.json
+    if not content:
+        return Response(status=400)
     print('content', content)
     video_analysis.set_ROIArea(content)
-    return Response()
+    return Response(status=200)
 
 
 if __name__ == '__main__':
