@@ -39,16 +39,6 @@ class VideoAnalysis:
 
         return capture
 
-    def intersect(self, line1, line2):
-        px = ((line1[0][0] * line1[1][1] - line1[0][1] * line1[1][0]) * (line2[0][0] - line2[1][0]) -
-              (line1[0][0] - line1[1][0]) * (line2[0][1]
-                                             * line2[1][1] - line2[0][1] * line2[1][0])) / (line1[0][0] - line1[1][0]) * (line2[0][1] - line2[1][1]) - (line1[0][1] - line1[1][1]) * (line2[0][0] - line2[1][0])
-
-        py = ((line1[0][0] * line1[1][1] - line1[0][1] * line1[1][0]) * (line2[0][1] - line2[1][1]) - (line1[0][1] - line1[1][1]) * (line2[0][1]
-
-                                                                                                                                     * line2[1][1] - line2[0][1] * line2[1][0])) / (line1[0][0] - line1[1][0]) * (line2[0][1] - line2[1][1]) - (line1[0][1] - line1[1][1]) * (line2[0][0] - line2[1][0])
-        print(px, py)
-
     # segments must be pass in the format [(x0,y0),(x1,y1)]
     def __intersects(self, segment1, segment2):
         dx0 = segment1[1][0]-segment1[0][0]
@@ -153,7 +143,8 @@ class VideoAnalysis:
                         print('warn: ', threshold)
                     else:
                         print('warn: ', threshold)
-
+                    
+                    # print(LABELS[classIDs[i]])
                     color = [int(c) for c in COLORS[classIDs[i]]]
                     # draw a box
                     cv2.rectangle(frame, point_start, point_end,
