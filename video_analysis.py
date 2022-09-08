@@ -32,7 +32,7 @@ class VideoAnalysis:
 
     def __get_video(self, video_url=0):
         capture = cv2.VideoCapture(video_url)
-
+        capture.set(cv2.CAP_PROP_BUFFERSIZE, 2)
         if not capture.isOpened():
             print("Cannot open camera")
             return capture.isOpened()
@@ -75,7 +75,7 @@ class VideoAnalysis:
         return False
 
     # start the stream and analysis
-    def read_stream(self, video_url):
+    def gen_read_stream(self, video_url):
         video = self.__get_video(video_url)
         if not video:
             return
@@ -143,7 +143,7 @@ class VideoAnalysis:
                         print('warn: ', threshold)
                     else:
                         print('warn: ', threshold)
-                    
+
                     # print(LABELS[classIDs[i]])
                     color = [int(c) for c in COLORS[classIDs[i]]]
                     # draw a box

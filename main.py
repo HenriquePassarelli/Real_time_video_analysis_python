@@ -1,6 +1,7 @@
 from flask import Flask, render_template, Response, request
+from waitress import serve
+import argparse
 import base64
-import sys
 
 from video_analysis import VideoAnalysis
 
@@ -23,8 +24,7 @@ def http_stream():
         print('hi')
         return Response('Missing parameters, eg. /stream?url=base64 url', status=400)
     print(url)
-
-    return Response(video_analysis.read_stream(url),
+    return Response(video_analysis.gen_read_stream(url),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
@@ -39,5 +39,11 @@ def set_ROI():
 
 
 if __name__ == '__main__':
-    port = 5000 if len(sys.argv) <= 1 else sys.argv[1]
-    app.run(host='0.0.0.0', debug=True, port=port)
+    parser = argparse.ArgumentParser(description="Camera Server")
+    parser.add_argument("--port",
+                        type=int,
+                        default=8000,
+                        help="Run on the given port")
+    args: argparse.Namespace = parser.parse_args()
+    serve(app, host="0.0.0.0", port=args.port)
+    # app.run(host='0.0.0.0', debug=True, port=args.port)
