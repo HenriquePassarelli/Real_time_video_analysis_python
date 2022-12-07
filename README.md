@@ -16,6 +16,15 @@ pip install numpy opencv-python
 pip install Flask
 ```
 
+### adding models files
+
+inside the yolo directory add two folders, one for the weights, and another for config. Reference right below.
+
+```
+CONFIG_FILE = 'yolo/cfg/yolov4-tiny.cfg'
+WEIGHTS_FILE = 'yolo/weights/yolov4-tiny.weights'
+```
+
 ### run script
 
 ```
