@@ -1,6 +1,6 @@
 # Real_time_video_analysis_python
 
-Using Python along with opencv to read a Mjpeg stream 
+Using Python along with opencv to read a Mjpeg stream, and do analysis.
 
 ### Install python
 
