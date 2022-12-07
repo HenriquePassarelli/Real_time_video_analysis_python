@@ -1,6 +1,6 @@
 # Real_time_video_analysis_python
 
-Using Python along with opencv to read a Mjpeg stream, and do analysis.
+Using Python along with opencv to read a Mjpeg stream, do analysis and check if the detected object is inside a predefined zone .
 
 ### Install python
 
@@ -35,3 +35,16 @@ python3 main.py <optional port>
 ```
 http://127.0.0.1:<port>/stream?url=<base64 video url>
 ```
+
+### set predefined area
+POST request
+```
+http://127.0.0.1:<port>/ROI
+```
+
+resquest body 
+
+##### Square pattern
+- top-left, bottom-left, bottom-right, top-right - ```[[100, 200], [100, 400], [800, 400], [800, 200]]```
+##### Line pattern 
+- ```[[150, 340], [800, 340]]```
